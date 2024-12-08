@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import GridBaseHeatmap from '../components/GridBaseHeatmap';
+import GridBaseHeatmap from '../components/grid_based_heatmap';
 import PieChart from '../components/PieChart';
 import LineChart from '../components/LineChart';
 import finalProjectConfig from './final_project_danqing';
