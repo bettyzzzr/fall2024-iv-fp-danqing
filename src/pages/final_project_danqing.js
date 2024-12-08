@@ -38,8 +38,8 @@ const FinalProject = () => {
       {/* Heatmap Section */}
       <div
         style={{
-          width: finalProjectConfig.layout.gridBaseHeatmap.width,
-          height: finalProjectConfig.layout.gridBaseHeatmap.height,
+          width: finalProjectConfig.layout.GridBaseHeatmap.width,
+          height: finalProjectConfig.layout.GridBaseHeatmap.height,
         }}
       >
         <GridBaseHeatmap onGridClick={handleGridClick} />
