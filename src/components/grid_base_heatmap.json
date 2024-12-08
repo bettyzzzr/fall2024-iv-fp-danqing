@@ -1,0 +1,14 @@
+{
+    "value_field": "emission",
+    "year_range": [2010, 2020],
+    "width": 800,
+    "height": 600,
+    "margin": { "top": 20, "right": 20, "bottom": 30, "left": 40 },
+    "grid_size": 40,
+    "colors": ["#ffffff", "#ff0000"],
+    "fields": {
+      "emission": "Carbon Emission",
+      "population": "Population"
+    }
+  }
+  

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
-import heatmapConfig from 'grid_base_heatmap.js'; // Import JSON configuration
+import heatmapConfig from './grid_base_heatmap.json';
 
 const dataUrl =
   'https://raw.githubusercontent.com/bettyzzzr/fall2024-iv-final-project-data/refs/heads/main/15%E5%9B%BD%E7%A2%B3%E6%8E%92%E6%94%BE.csv';
