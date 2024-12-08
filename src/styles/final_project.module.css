@@ -1,0 +1,32 @@
+/* Overall container */
+.container {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+  }
+  
+  /* Heatmap section (left) */
+  .heatmap {
+    width: 66.67%;
+    height: 100%;
+    border-right: 1px solid #ddd; /* Optional separator */
+  }
+  
+  /* Right-side charts container */
+  .right-charts {
+    width: 33.33%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Pie chart (top half) */
+  .pie-chart {
+    height: 50%;
+    border-bottom: 1px solid #ddd; /* Optional separator */
+  }
+  
+  /* Line chart (bottom half) */
+  .line-chart {
+    height: 50%;
+  }
+  
