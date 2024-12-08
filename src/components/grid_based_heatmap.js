@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import heatmapConfig from './grid_base_heatmap.json'; // Import JSON configuration
-import data from '../../data.csv'; // Path to the CSV file
+
+const dataUrl =
+  'https://raw.githubusercontent.com/bettyzzzr/fall2024-iv-final-project-data/refs/heads/main/15%E5%9B%BD%E7%A2%B3%E6%8E%92%E6%94%BE.csv';
 
 const GridBaseHeatmap = () => {
   const svgRef = useRef();
@@ -9,8 +11,8 @@ const GridBaseHeatmap = () => {
   const [shape, setShape] = useState('square'); // Default shape is square
 
   useEffect(() => {
-    // Load and process data, then render heatmap
-    d3.csv(data).then((csvData) => {
+    // Load and process data from the remote URL, then render heatmap
+    d3.csv(dataUrl).then((csvData) => {
       const filteredData = preprocessData(csvData, heatmapConfig);
       renderHeatmap(filteredData, svgRef, heatmapConfig, valueField, shape);
     });
@@ -21,97 +23,75 @@ const GridBaseHeatmap = () => {
     const latestYear = config.year_range[1];
     const topCountries = csvData
       .filter((d) => +d.year === latestYear)
-      .sort((a, b) => b[config.size_field] - a[config.size_field])
-      .slice(0, config.top_countries)
-      .map((d) => d[config.y_axis]);
+      .sort((a, b) => +b[config.value_field] - +a[config.value_field])
+      .slice(0, 15);
 
-    return csvData.filter((d) => topCountries.includes(d[config.y_axis]));
+    return topCountries;
   };
 
   const renderHeatmap = (data, svgRef, config, valueField, shape) => {
     const svg = d3.select(svgRef.current);
-    const width = 800;
-    const height = 600;
-    const margin = { top: 20, right: 20, bottom: 40, left: 100 };
+    svg.selectAll('*').remove(); // Clear previous rendering
 
-    svg.selectAll('*').remove(); // Clear existing content
+    const { width, height, margin, grid_size, colors } = config;
 
-    const years = d3.range(config.year_range[0], config.year_range[1] + 1);
-    const countries = [...new Set(data.map((d) => d[config.y_axis]))];
+    const x = d3
+      .scaleBand()
+      .domain(data.map((d) => d.country))
+      .range([margin.left, width - margin.right])
+      .padding(0.1);
 
-    // Scales
-    const xScale = d3.scaleBand().domain(years).range([margin.left, width - margin.right]).padding(0.1);
-    const yScale = d3.scaleBand().domain(countries).range([margin.top, height - margin.bottom]).padding(0.1);
-    const colorScale = d3.scaleLinear().domain(d3.extent(data, (d) => +d[valueField])).range(['white', config.color]);
-    const sizeScale = d3.scaleSqrt().domain(d3.extent(data, (d) => +d[config.size_field])).range([5, xScale.bandwidth() / 2]);
+    const y = d3
+      .scaleBand()
+      .domain(data.map((d) => d.year))
+      .range([margin.top, height - margin.bottom])
+      .padding(0.1);
 
-    // Axes
-    const xAxis = d3.axisBottom(xScale).tickFormat(d3.format('d'));
-    const yAxis = d3.axisLeft(yScale);
+    const colorScale = d3
+      .scaleSequential(d3.interpolateBlues)
+      .domain([0, d3.max(data, (d) => +d[valueField])]);
 
-    svg.append('g').attr('transform', `translate(0, ${height - margin.bottom})`).call(xAxis);
-    svg.append('g').attr('transform', `translate(${margin.left}, 0)`).call(yAxis);
-
-    // Heatmap elements
     svg
-      .selectAll(shape === 'square' ? 'rect' : 'circle')
+      .selectAll('rect')
       .data(data)
-      .join(shape === 'square' ? 'rect' : 'circle')
-      .attr(
-        'x',
-        (d) => (shape === 'square' ? xScale(+d[config.x_axis]) : xScale(+d[config.x_axis]) + xScale.bandwidth() / 2)
-      )
-      .attr(
-        'y',
-        (d) => (shape === 'square' ? yScale(d[config.y_axis]) : yScale(d[config.y_axis]) + yScale.bandwidth() / 2)
-      )
-      .attr('width', (d) => (shape === 'square' ? sizeScale(+d[config.size_field]) * 2 : null))
-      .attr('height', (d) => (shape === 'square' ? sizeScale(+d[config.size_field]) * 2 : null))
-      .attr('cx', (d) => (shape === 'circle' ? xScale(+d[config.x_axis]) + xScale.bandwidth() / 2 : null))
-      .attr('cy', (d) => (shape === 'circle' ? yScale(d[config.y_axis]) + yScale.bandwidth() / 2 : null))
-      .attr('r', (d) => (shape === 'circle' ? sizeScale(+d[config.size_field]) : null))
-      .attr('fill', (d) => colorScale(+d[valueField]))
-      .on('mouseover', (e, d) => {
-        const tooltip = d3.select('#tooltip');
-        tooltip
-          .style('visibility', 'visible')
-          .text(
-            `${d[config.y_axis]} (${d[config.x_axis]}): CO2 Emissions = ${d[config.size_field]}, ${valueField} = ${d[valueField]}`
-          )
-          .style('top', `${e.pageY}px`)
-          .style('left', `${e.pageX + 10}px`);
-      })
-      .on('mouseout', () => {
-        d3.select('#tooltip').style('visibility', 'hidden');
-      });
+      .enter()
+      .append('rect')
+      .attr('x', (d) => x(d.country))
+      .attr('y', (d) => y(d.year))
+      .attr('width', grid_size)
+      .attr('height', grid_size)
+      .attr('fill', (d) => colorScale(+d[valueField]));
   };
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div>
+      <h1>Grid-Based Heatmap</h1>
       <div>
-        <label htmlFor="valueField">Select Data for Color: </label>
-        <select id="valueField" onChange={(e) => setValueField(e.target.value)} value={valueField}>
-          <option value="population">Population</option>
-          <option value="gdp">GDP</option>
-        </select>
-        <label htmlFor="shape">Select Shape: </label>
-        <select id="shape" onChange={(e) => setShape(e.target.value)} value={shape}>
-          <option value="square">Square</option>
-          <option value="circle">Circle</option>
-        </select>
+        <label>
+          Value Field:
+          <select value={valueField} onChange={(e) => setValueField(e.target.value)}>
+            {Object.keys(heatmapConfig.fields).map((field) => (
+              <option key={field} value={field}>
+                {heatmapConfig.fields[field]}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
-      <svg ref={svgRef}></svg>
-      <div
-        id="tooltip"
-        style={{
-          position: 'absolute',
-          background: 'lightgray',
-          padding: '5px',
-          borderRadius: '3px',
-          visibility: 'hidden',
-          pointerEvents: 'none',
-        }}
-      ></div>
+      <div>
+        <label>
+          Shape:
+          <select value={shape} onChange={(e) => setShape(e.target.value)}>
+            <option value="square">Square</option>
+            <option value="circle">Circle</option>
+          </select>
+        </label>
+      </div>
+      <svg
+        ref={svgRef}
+        width={heatmapConfig.width}
+        height={heatmapConfig.height}
+      ></svg>
     </div>
   );
 };
